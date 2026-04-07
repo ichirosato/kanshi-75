@@ -7,12 +7,12 @@ st.set_page_config(page_title="汉诗 75 首", layout="centered")
 
 st.markdown("""
     <style>
-    .stButton button { width: 100%; height: 3em; font-size: 1.2rem !important; margin-bottom: 10px; }
-    .poem-box { background-color: #f0f2f6; padding: 20px; border-radius: 10px; text-align: center; margin-bottom: 20px; }
-    h1 { text-align: center; font-size: 1.8rem !important; }
-    h3 { text-align: center; font-size: 2.2rem !important; color: #2E4053; }
-    /* 一覧の各行をカードっぽく見せる */
-    .poem-card { border-bottom: 1px solid #ddd; padding: 10px 0; }
+    /* ボタンの共通スタイル */
+    .stButton button { width: 100%; height: 3.5em; font-size: 1.1rem !important; margin-bottom: 8px; border-radius: 8px; }
+    /* 出題ボックスのスタイル */
+    .poem-box { background-color: #f8f9fa; padding: 25px; border-radius: 15px; text-align: center; border: 1px solid #e9ecef; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    h1 { text-align: center; font-size: 1.8rem !important; color: #1B2631; }
+    h3 { text-align: center; font-size: 2rem !important; color: #2E4053; margin-top: 10px; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -70,8 +70,7 @@ if 'current_poem' not in st.session_state:
 if 'hint_level' not in st.session_state:
     st.session_state.hint_level = 0
 
-st.write(f"当前范围内共有 **{len(filtered_df)}** 首诗")
-
+# 次の問題を出すボタン
 if st.button("✨ 随机抽题 (Next Poem)"):
     if not filtered_df.empty:
         st.session_state.current_poem = filtered_df.sample(1).iloc[0]
@@ -79,10 +78,13 @@ if st.button("✨ 随机抽题 (Next Poem)"):
     else:
         st.error("没有符合条件的诗。")
 
+# 問題表示
 if st.session_state.current_poem is not None:
     p = st.session_state.current_poem
     st.markdown('<div class="poem-box">', unsafe_allow_html=True)
     st.markdown(f"### {p['title']}")
+    
+    # ヒント表示（ヒント1：作者、2：第一句、3：全文）
     if st.session_state.hint_level >= 1:
         st.write(f"作者：[{p['dynasty']}] {p['author']}")
     if st.session_state.hint_level >= 2:
@@ -91,24 +93,26 @@ if st.session_state.current_poem is not None:
         st.success(f"全文：\n\n{p['full_text']}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    col1, col2 = st.columns(2)
+    # 操作ボタン：3列に配置（ヒント / 答え / 会了）
+    col1, col2, col3 = st.columns(3)
     with col1:
-        if st.button("💡 提示 (Hint)"):
+        if st.button("💡 提示"):
             if st.session_state.hint_level < 3:
                 st.session_state.hint_level += 1
     with col2:
-        if st.button("✅ 会了！ (Mastered)"):
+        if st.button("📖 答案"):
+            st.session_state.hint_level = 3 # 一気に全文表示
+    with col3:
+        if st.button("✅ 会了"):
             st.balloons()
 
-# --- 6. 一覧表示（改善：各項目をアコーディオンに） ---
+# --- 6. 一覧表示 ---
 st.divider()
-st.subheader("📚 汉诗一览 (View List)")
+st.subheader(f"📚 当前范围内共有 {len(filtered_df)} 首")
 if filtered_df.empty:
-    st.write("请在侧边栏选择学习范围。")
+    st.write("请在侧辺栏选择学习范围。")
 else:
     for index, row in filtered_df.iterrows():
-        # 一首ずつ「折りたたみ」の中に全文を隠す
         with st.expander(f"{row['id']}. {row['title']} / {row['author']}"):
-            st.write(f"**朝代：** {row['dynasty']}")
-            st.write(f"**分类：** {row['category']}")
+            st.write(f"**朝代：** {row['dynasty']}  |  **分类：** {row['category']}")
             st.info(row['full_text'])
