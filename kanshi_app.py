@@ -5,45 +5,42 @@ import random
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="汉诗 75 首", layout="centered")
 
+# 【魔法のCSS】これを追加することで、ボタンの隙間と横並びを強制します
 st.markdown("""
     <style>
-    /* 【超重要】カラム間の隙間をゼロにして横スクロールを阻止 */
-    [data-testid="stHorizontalBlock"] {
-        gap: 8px !important; /* ボタン同士の隙間を適度な 8px に固定 */
+    /* カラムを強制的に横並び(flex)にする */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        gap: 5px !important;
     }
-    [data-testid="column"] {
+    /* 各カラムを3等分にする */
+    div[data-testid="column"] {
+        flex: 1 1 30% !important;
+        min-width: 30% !important;
+        max-width: 33% !important;
+    }
+    /* ボタンの文字サイズと余白をスマホに最適化 */
+    .stButton button {
         width: 100% !important;
-        min-width: 0 !important;
-        flex: 1 1 0% !important;
-    }
-    
-    /* ボタンのサイズ：小さすぎず、でも1行に収まる絶妙なサイズ */
-    .stButton button { 
-        width: 100% !important; 
-        height: 3.2em !important; 
-        font-size: 1.0rem !important; /* 文字サイズを標準に戻す */
+        font-size: 0.95rem !important;
         padding: 0 !important;
-        border-radius: 8px !important;
-        white-space: nowrap !important; /* 文字の折り返しを防ぐ */
+        height: 3.2em !important;
+        white-space: nowrap !important;
     }
-
-    /* 出題ボックスのデザイン */
+    /* 問題ボックスをスリムに */
     .poem-box { 
         background-color: #f8f9fa; 
         padding: 15px; 
         border-radius: 12px; 
         text-align: center; 
         border: 1px solid #e9ecef; 
-        margin-bottom: 12px; 
+        margin-bottom: 10px;
     }
-    h3 { text-align: center; font-size: 1.8rem !important; color: #2E4053; margin: 5px 0; }
-    
-    /* 画面全体の左右の余白を少し削ってボタンの有効幅を広げる */
-    .block-container { 
-        padding-left: 1rem !important; 
-        padding-right: 1rem !important; 
-        padding-top: 1.5rem !important; 
-    }
+    h3 { margin: 5px 0 !important; font-size: 1.6rem !important; }
+    .block-container { padding: 1.5rem 1rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -59,7 +56,7 @@ def load_data():
 
 df = load_data()
 
-# --- 3. サイドバー ---
+# --- 3. フィルター機能（サイドバー） ---
 st.sidebar.header("🎯 范围设定")
 max_level = int(df["level"].max())
 selected_levels = st.sidebar.multiselect("阶段 (Level)", options=list(range(1, max_level + 1)), default=[1, 2, 3])
@@ -85,7 +82,7 @@ if selected_tags:
         return any(t in tags for t in selected_tags)
     filtered_df = filtered_df[filtered_df["category"].apply(check_tags)]
 
-# --- 5. メイン：出題システム ---
+# --- 5. 出題システム ---
 if 'current_poem' not in st.session_state: st.session_state.current_poem = None
 if 'hint_level' not in st.session_state: st.session_state.hint_level = 0
 
@@ -104,14 +101,14 @@ if st.session_state.current_poem is not None:
     if st.session_state.hint_level >= 3: st.success(p['full_text'])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # ボタンエリア：gapを小さく、文字サイズを適切に
-    c1, c2, c3 = st.columns(3)
-    with c1:
+    # 3カラム配置（CSSで強制的に横並び）
+    col1, col2, col3 = st.columns(3)
+    with col1:
         if st.button("💡提示"):
             if st.session_state.hint_level < 3: st.session_state.hint_level += 1
-    with c2:
+    with col2:
         if st.button("📖答案"): st.session_state.hint_level = 3
-    with c3:
+    with col3:
         if st.button("✅会了"): st.balloons()
 
 # --- 6. 一覧表示 ---
