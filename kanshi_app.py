@@ -5,42 +5,54 @@ import random
 # --- 1. ページ設定 ---
 st.set_page_config(page_title="汉诗 75 首", layout="centered")
 
-# 【魔法のCSS】これを追加することで、ボタンの隙間と横並びを強制します
 st.markdown("""
     <style>
-    /* カラムを強制的に横並び(flex)にする */
+    /* 【最強の強制横並び】カラム機能を無視して横に並べる */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        justify-content: space-between !important;
-        gap: 5px !important;
+        gap: 6px !important; /* ボタン同士の隙間を最小限に */
+        width: 100% !important;
+        margin: 0 auto !important;
+        justify-content: center !important;
     }
-    /* 各カラムを3等分にする */
+    
+    /* 隙間の原因となるカラム自体のマージンを殺す */
     div[data-testid="column"] {
-        flex: 1 1 30% !important;
-        min-width: 30% !important;
-        max-width: 33% !important;
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
+        padding: 0 !important;
+        margin: 0 !important;
     }
-    /* ボタンの文字サイズと余白をスマホに最適化 */
+    
+    /* ボタンを枠いっぱいに広げ、文字を折り返さない */
     .stButton button {
         width: 100% !important;
-        font-size: 0.95rem !important;
         padding: 0 !important;
         height: 3.2em !important;
+        font-size: 0.95rem !important;
         white-space: nowrap !important;
+        overflow: hidden;
     }
-    /* 問題ボックスをスリムに */
+
+    /* 画面左右の巨大な空白を削る */
+    .block-container { 
+        padding-left: 0.5rem !important; 
+        padding-right: 0.5rem !important; 
+        max-width: 100% !important;
+    }
+    
+    /* ボックスのデザインをスマホ用にスリム化 */
     .poem-box { 
         background-color: #f8f9fa; 
-        padding: 15px; 
+        padding: 12px; 
         border-radius: 12px; 
         text-align: center; 
         border: 1px solid #e9ecef; 
         margin-bottom: 10px;
     }
     h3 { margin: 5px 0 !important; font-size: 1.6rem !important; }
-    .block-container { padding: 1.5rem 1rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -56,7 +68,7 @@ def load_data():
 
 df = load_data()
 
-# --- 3. フィルター機能（サイドバー） ---
+# --- 3. サイドバー ---
 st.sidebar.header("🎯 范围设定")
 max_level = int(df["level"].max())
 selected_levels = st.sidebar.multiselect("阶段 (Level)", options=list(range(1, max_level + 1)), default=[1, 2, 3])
@@ -86,7 +98,7 @@ if selected_tags:
 if 'current_poem' not in st.session_state: st.session_state.current_poem = None
 if 'hint_level' not in st.session_state: st.session_state.hint_level = 0
 
-if st.button("✨ 随机抽题 (Next)"):
+if st.button("✨ 随机抽题 (Next Poem)"):
     if not filtered_df.empty:
         st.session_state.current_poem = filtered_df.sample(1).iloc[0]
         st.session_state.hint_level = 0
@@ -101,14 +113,14 @@ if st.session_state.current_poem is not None:
     if st.session_state.hint_level >= 3: st.success(p['full_text'])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3カラム配置（CSSで強制的に横並び）
-    col1, col2, col3 = st.columns(3)
-    with col1:
+    # 3列横並び（CSSで隙間を限界まで削除）
+    c1, c2, c3 = st.columns(3)
+    with c1:
         if st.button("💡提示"):
             if st.session_state.hint_level < 3: st.session_state.hint_level += 1
-    with col2:
+    with c2:
         if st.button("📖答案"): st.session_state.hint_level = 3
-    with col3:
+    with c3:
         if st.button("✅会了"): st.balloons()
 
 # --- 6. 一覧表示 ---
