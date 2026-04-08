@@ -2,44 +2,49 @@ import streamlit as st
 import pandas as pd
 import random
 
-# --- 1. ページ設定（スマホ・横並び最適化） ---
+# --- 1. ページ設定（スマホ最適化） ---
 st.set_page_config(page_title="汉诗 75 首", layout="centered")
 
 st.markdown("""
     <style>
-    /* ボタンを強制的に横並びにする設定 */
-    [data-testid="column"] {
-        width: 32% !important;
-        flex: 1 1 30% !important;
-        min-width: 30% !important;
+    /* 強制横並び & ボタンの小型化 */
+    [data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px !important;
     }
-    div[data-testid="stHorizontalBlock"] {
-        gap: 5px !important;
+    [data-testid="column"] {
+        flex: 1 1 0% !important;
+        min-width: 0 !important;
     }
     .stButton button { 
-        width: 100%; 
-        height: 3em; 
-        font-size: 0.9rem !important; 
-        padding: 0px !important;
-        margin-bottom: 0px; 
+        width: 100% !important; 
+        height: 2.8em !important; 
+        font-size: 0.8rem !important; /* ボタンの文字を少し小さく */
+        padding: 0 !important;
+        border-radius: 6px !important;
     }
-    /* 出題ボックスを少しコンパクトに */
+
+    /* 出題ボックスをさらにコンパクトに */
     .poem-box { 
         background-color: #f8f9fa; 
-        padding: 15px; 
-        border-radius: 12px; 
+        padding: 12px; 
+        border-radius: 10px; 
         text-align: center; 
         border: 1px solid #e9ecef; 
-        margin-bottom: 10px; 
+        margin-bottom: 8px; 
     }
-    h1 { text-align: center; font-size: 1.5rem !important; margin-bottom: 0.5rem; }
-    h3 { text-align: center; font-size: 1.8rem !important; color: #2E4053; margin: 5px 0; }
-    /* 余計な余白を削る */
-    .block-container { padding-top: 2rem !important; padding-bottom: 1rem !important; }
+    h1 { text-align: center; font-size: 1.4rem !important; margin-bottom: 0.1rem; }
+    h3 { text-align: center; font-size: 1.5rem !important; color: #2E4053; margin: 3px 0; }
+    .stAlert { padding: 0.5rem !important; margin-top: 5px !important; }
+    
+    /* 画面全体の余白を最小限に */
+    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
     </style>
     """, unsafe_allow_html=True)
 
-st.title("诵读经典：汉诗 75 首")
+st.title("诵读经典：汉詩 75")
 
 # --- 2. データの読み込み ---
 @st.cache_data
@@ -52,7 +57,7 @@ def load_data():
 df = load_data()
 
 # --- 3. サイドバー ---
-st.sidebar.header("🎯 学习范围")
+st.sidebar.header("🎯 范围设定")
 max_level = int(df["level"].max())
 selected_levels = st.sidebar.multiselect("阶段 (Level)", options=list(range(1, max_level + 1)), default=[1, 2, 3])
 
@@ -68,8 +73,8 @@ with st.sidebar.expander("更多筛选"):
 # --- 4. フィルター実行 ---
 filtered_df = df.copy()
 if selected_levels: filtered_df = filtered_df[filtered_df["level"].isin(selected_levels)]
-if selected_dynasty: filtered_df = filtered_df[filtered_df["dynasty"].isin(selected_dynasty)]
-if selected_author: filtered_df = filtered_df[filtered_author := filtered_df["author"].isin(selected_author)]
+if selected_dynasty: filtered_df = filtered_df[filtered_dynasty := filtered_df["dynasty"].isin(selected_dynasty)]
+if selected_author: filtered_df = filtered_df[filtered_df["author"].isin(selected_author)]
 if selected_tags:
     def check_tags(c):
         norm = str(c).replace("，", ",").replace("、", ",").replace("·", ",").replace("/", ",")
@@ -85,7 +90,7 @@ if st.button("✨ 随机抽题 (Next)"):
     if not filtered_df.empty:
         st.session_state.current_poem = filtered_df.sample(1).iloc[0]
         st.session_state.hint_level = 0
-    else: st.error("没有符合条件的诗。")
+    else: st.error("没有符合条件。")
 
 if st.session_state.current_poem is not None:
     p = st.session_state.current_poem
@@ -96,17 +101,17 @@ if st.session_state.current_poem is not None:
     if st.session_state.hint_level >= 3: st.success(p['full_text'])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 3つのボタンを横並びに固定
-    col1, col2, col3 = st.columns(3)
-    with col1:
+    # 横一列ボタン
+    c1, c2, c3 = st.columns(3)
+    with c1:
         if st.button("💡提示"):
             if st.session_state.hint_level < 3: st.session_state.hint_level += 1
-    with col2:
+    with c2:
         if st.button("📖答案"): st.session_state.hint_level = 3
-    with col3:
+    with c3:
         if st.button("✅会了"): st.balloons()
 
-# --- 6. 一覧表示（コンパクト版） ---
+# --- 6. 一覧表示 ---
 st.divider()
 st.subheader(f"📚 一览 ({len(filtered_df)}首)")
 for index, row in filtered_df.iterrows():
