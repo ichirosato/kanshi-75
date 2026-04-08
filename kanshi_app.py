@@ -2,45 +2,48 @@ import streamlit as st
 import pandas as pd
 import random
 
-# --- 1. ページ設定（スマホ最適化） ---
+# --- 1. ページ設定 ---
 st.set_page_config(page_title="汉诗 75 首", layout="centered")
 
 st.markdown("""
     <style>
-    /* 強制横並び & ボタンの小型化 */
+    /* 【超重要】カラム間の隙間をゼロにして横スクロールを阻止 */
     [data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 4px !important;
+        gap: 8px !important; /* ボタン同士の隙間を適度な 8px に固定 */
     }
     [data-testid="column"] {
-        flex: 1 1 0% !important;
+        width: 100% !important;
         min-width: 0 !important;
+        flex: 1 1 0% !important;
     }
+    
+    /* ボタンのサイズ：小さすぎず、でも1行に収まる絶妙なサイズ */
     .stButton button { 
         width: 100% !important; 
-        height: 2.8em !important; 
-        font-size: 0.8rem !important; /* ボタンの文字を少し小さく */
+        height: 3.2em !important; 
+        font-size: 1.0rem !important; /* 文字サイズを標準に戻す */
         padding: 0 !important;
-        border-radius: 6px !important;
+        border-radius: 8px !important;
+        white-space: nowrap !important; /* 文字の折り返しを防ぐ */
     }
 
-    /* 出題ボックスをさらにコンパクトに */
+    /* 出題ボックスのデザイン */
     .poem-box { 
         background-color: #f8f9fa; 
-        padding: 12px; 
-        border-radius: 10px; 
+        padding: 15px; 
+        border-radius: 12px; 
         text-align: center; 
         border: 1px solid #e9ecef; 
-        margin-bottom: 8px; 
+        margin-bottom: 12px; 
     }
-    h1 { text-align: center; font-size: 1.4rem !important; margin-bottom: 0.1rem; }
-    h3 { text-align: center; font-size: 1.5rem !important; color: #2E4053; margin: 3px 0; }
-    .stAlert { padding: 0.5rem !important; margin-top: 5px !important; }
+    h3 { text-align: center; font-size: 1.8rem !important; color: #2E4053; margin: 5px 0; }
     
-    /* 画面全体の余白を最小限に */
-    .block-container { padding-top: 1rem !important; padding-bottom: 1rem !important; }
+    /* 画面全体の左右の余白を少し削ってボタンの有効幅を広げる */
+    .block-container { 
+        padding-left: 1rem !important; 
+        padding-right: 1rem !important; 
+        padding-top: 1.5rem !important; 
+    }
     </style>
     """, unsafe_allow_html=True)
 
@@ -73,7 +76,7 @@ with st.sidebar.expander("更多筛选"):
 # --- 4. フィルター実行 ---
 filtered_df = df.copy()
 if selected_levels: filtered_df = filtered_df[filtered_df["level"].isin(selected_levels)]
-if selected_dynasty: filtered_df = filtered_df[filtered_dynasty := filtered_df["dynasty"].isin(selected_dynasty)]
+if selected_dynasty: filtered_df = filtered_df[filtered_df["dynasty"].isin(selected_dynasty)]
 if selected_author: filtered_df = filtered_df[filtered_df["author"].isin(selected_author)]
 if selected_tags:
     def check_tags(c):
@@ -101,7 +104,7 @@ if st.session_state.current_poem is not None:
     if st.session_state.hint_level >= 3: st.success(p['full_text'])
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # 横一列ボタン
+    # ボタンエリア：gapを小さく、文字サイズを適切に
     c1, c2, c3 = st.columns(3)
     with c1:
         if st.button("💡提示"):
